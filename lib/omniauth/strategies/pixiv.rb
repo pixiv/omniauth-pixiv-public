@@ -8,10 +8,11 @@ module OmniAuth
       option :client_options, {
         site: 'https://public-api.secure.pixiv.net',
         authorize_url: 'https://oauth.secure.pixiv.net/v2/auth/authorize',
-        token_url: 'https://oauth.secure.pixiv.net/v2/auth/token'
+        token_url: 'https://oauth.secure.pixiv.net/v2/auth/token',
       }
 
       option :image_size, 'px_170x170'
+      option :user_agent, Omniauth::Pixiv::Faraday::Request::UserAgent::DEFAULT_USER_AGENT
 
       uid { raw_info['id'] }
 
@@ -27,6 +28,14 @@ module OmniAuth
 
       extra do
         { raw_info: raw_info }
+      end
+
+      def client
+        ::OAuth2::Client.new(options.client_id, options.client_secret, deep_symbolize(options.client_options)) do |faraday|
+          faraday.request :url_encoded
+          faraday.request :user_agent, options[:user_agent]
+          faraday.adapter Faraday.default_adapter
+        end
       end
 
       def callback_url
